@@ -1,32 +1,29 @@
 ﻿using System;
-using System.Globalization;
 
 namespace ObjectPrinting.Solved
 {
     public class PropertyPrintingConfig<TOwner, TPropType> : IPropertyPrintingConfig<TOwner, TPropType>
-	{
-		private readonly PrintingConfig<TOwner> printingConfig;
+    {
+        private readonly PrintingConfig<TOwner> printingConfig;
+        private readonly string propertyName;
+        string IPropertyPrintingConfig<TOwner, TPropType>.PropName => propertyName;
+        PrintingConfig<TOwner> IPropertyPrintingConfig<TOwner, TPropType>.ParentConfig => printingConfig;
 
-		public PropertyPrintingConfig(PrintingConfig<TOwner> printingConfig)
-		{
-			this.printingConfig = printingConfig;
-		}
+        public PropertyPrintingConfig(PrintingConfig<TOwner> printingConfig, string propertyName=null)
+        {
+            this.printingConfig = printingConfig;
+            this.propertyName = propertyName;
+        }
 
 		public PrintingConfig<TOwner> Using(Func<TPropType, string> print)
 		{
-			return printingConfig;
+		    if (!string.IsNullOrWhiteSpace(propertyName))
+		        ((IPrintingConfig<TOwner>) printingConfig)
+		            .AddPropertySerialisation(propertyName, obj => print((TPropType)obj));
+		    else
+		        ((IPrintingConfig<TOwner>) printingConfig)
+		            .AddTypeSerialisation(typeof(TPropType), obj => print((TPropType)obj));
+            return printingConfig;
 		}
-
-		public PrintingConfig<TOwner> Using(CultureInfo culture)
-		{
-			return printingConfig;
-		}
-
-		PrintingConfig<TOwner> IPropertyPrintingConfig<TOwner, TPropType>.ParentConfig => printingConfig;
-	}
-
-	public interface IPropertyPrintingConfig<TOwner, TPropType>
-	{
-		PrintingConfig<TOwner> ParentConfig { get; }
 	}
 }
